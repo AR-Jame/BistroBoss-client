@@ -1,18 +1,65 @@
-import { useEffect } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import bg from '../assets/others/authentication2.png'
 import { loadCaptchaEnginge, LoadCanvasTemplate, validateCaptcha } from 'react-simple-captcha';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { AuthContext } from '../Authentication/AuthProvider';
+import Swal from 'sweetalert2';
+import { FaGoogle } from 'react-icons/fa';
 
 const Login = () => {
+
+    const { signIn, googleSignIn } = useContext(AuthContext)
+    const navigate = useNavigate()
+    const location = useLocation();
+    const [validCaptcha, setValidCaptcha] = useState(false)
+    const captchaRef = useRef(null)
     useEffect(() => {
         loadCaptchaEnginge(6, 'transparent');
     }, [])
     const handleSubmit = (e) => {
         e.preventDefault();
         const form = e.target;
-        const name = form.email.value;
+        const email = form.email.value;
         const password = form.password.value;
-        const captcha = form.captcha.value;
-        console.log(captcha, name, password);
+        console.log(email, password);
+
+        signIn(email, password)
+            .then(() => {
+                Swal.fire({
+                    title: "Thanks",
+                    text: "You successfully log in",
+                    icon: "success"
+                });
+                navigate(location.state ? location.state : '/');
+            }).catch((err) => {
+                console.log(err);
+            });
+
+    }
+    const handleGoogle = () => {
+        googleSignIn()
+            .then(() => {
+                Swal.fire({
+                    title: "Thanks",
+                    text: "You successfully log in",
+                    icon: "success"
+                });
+                navigate()
+                navigate(location.state ? location.state : '/');
+            }).catch((err) => {
+                console.log(err);
+            });
+
+    }
+
+    const handleCaptcha = () => {
+        const value = captchaRef.current.value;
+        console.log(value);
+        if (validateCaptcha(value)) {
+            setValidCaptcha(true)
+        } else {
+            setValidCaptcha(false)
+        }
     }
     return (
         <div className={`min-h-screen flex items-center justify-center bg-loginBg`}>
@@ -41,7 +88,7 @@ const Login = () => {
                             <input
                                 type="email"
                                 id="email"
-                                placeholder="Type here"
+                                placeholder="Enter your email"
                                 name='email'
                                 className="mt-2 block w-full px-4 py-3 text-lg border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-blue-500"
                             />
@@ -74,18 +121,22 @@ const Login = () => {
                                     <LoadCanvasTemplate />
                                 </div>
                             </div>
-                            <input
-                                type="text"
-                                placeholder="Type here"
-                                name='captcha'
-                                className="mt-4 block w-full px-4 py-3 text-lg border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-blue-500"
-                            />
+                            <div className='flex gap-2'>
+                                <input
+                                    type="text"
+                                    placeholder="Type here"
+                                    name='captcha'
+                                    ref={captchaRef}
+                                    className="block mt-4 w-[60%] px-4 py-3 text-lg border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-blue-500"
+                                />
+                                <button type='button' onClick={handleCaptcha} className='bg-yellow-500 mt-4 flex-1 text-white px-3 rounded-md shadow-md hover:bg-yellow-600 focus:ring'>Submit captcha</button>
+                            </div>
                         </div>
 
                         {/* Submit Button */}
                         <button
                             type="submit"
-                            className="w-full bg-yellow-500 text-white py-3 px-6 text-lg rounded-md shadow-md hover:bg-yellow-600 focus:ring focus:ring-yellow-300"
+                            className={`${validCaptcha ? '' : "btn-disabled btn"} w-full bg-yellow-500 text-white py-3 px-6 text-lg rounded-md shadow-md hover:bg-yellow-600 focus:ring focus:ring-yellow-300`}
                         >
                             Sign In
                         </button>
@@ -95,9 +146,9 @@ const Login = () => {
                     <div className="mt-6 text-center">
                         <p className="text-lg text-gray-600">
                             New here?{" "}
-                            <a href="#" className="text-orange-500 font-medium">
+                            <Link to='/register' className="text-orange-500 font-medium">
                                 Create a New Account
-                            </a>
+                            </Link>
                         </p>
                     </div>
 
@@ -105,14 +156,8 @@ const Login = () => {
                     <div className="mt-6 text-center">
                         <p className="text-lg text-gray-600">Or sign in with</p>
                         <div className="flex justify-center mt-4 space-x-6">
-                            <button className="text-gray-500 hover:text-gray-700">
-                                <i className="fab fa-facebook fa-3x"></i>
-                            </button>
-                            <button className="text-gray-500 hover:text-gray-700">
-                                <i className="fab fa-google fa-3x"></i>
-                            </button>
-                            <button className="text-gray-500 hover:text-gray-700">
-                                <i className="fab fa-github fa-3x"></i>
+                            <button onClick={handleGoogle} className="text-gray-500 border rounded-full btn p-4 hover:bg-transparent border-gray-500 hover:border-gray-700 hover:text-gray-700">
+                                <FaGoogle />
                             </button>
                         </div>
                     </div>

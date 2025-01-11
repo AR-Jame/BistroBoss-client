@@ -10,7 +10,6 @@ const Recommends = () => {
             .then(data => {
                 const filter = data.filter(single => single.category === 'offered')
                 setRecommends(filter)
-                console.log(recommends)
             })
     }, [])
     return (
